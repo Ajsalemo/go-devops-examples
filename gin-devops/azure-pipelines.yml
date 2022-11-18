@@ -1,0 +1,75 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+trigger:
+  - master
+  
+pool:
+  vmImage: ubuntu-latest
+  
+variables:
+  webAppName: 'myapp'
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: BuildJob
+    steps:
+    - task: GoTool@0
+      inputs:
+        version: '1.19'
+        
+    - task: Go@0
+      inputs:
+        command: custom
+        customCommand: 'mod'
+        arguments: 'tidy'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: 'Go mod tidy'
+
+    - task: Go@0
+      inputs:
+        command: 'build'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: 'Go build'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        artifactName: drop
+
+- stage: Deploy
+  displayName: 'Deploy Web App'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeploymentJob
+    environment: '$(webAppName)'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Mysub(00000000-0000-0000-0000-000000000000)'
+              appType: 'webAppLinux'
+              WebAppName: '$(webAppName)'
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              RuntimeStack: 'GO|1.19'
+              # This should be set in production
+              AppSettings: '-GIN_MODE release'
+
+  
+  
