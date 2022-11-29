@@ -66,6 +66,6 @@ stages:
           steps:
             # TBD
             # need to see if it's possible to use a typical deploy task or deploy via the CLI due to possible Oryx limitations
-                
+            # az webapp deploy --resource-group <group-name> --name <app-name> --src-path <zip-package-path>
       
   
