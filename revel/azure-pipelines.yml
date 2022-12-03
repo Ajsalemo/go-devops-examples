@@ -15,10 +15,21 @@ stages:
   jobs:
   - job: BuildJob
     steps:
+    - script: |
+        mkdir '$(System.DefaultWorkingDirectory)/go'
+        mkdir '$(System.DefaultWorkingDirectory)/go/src'
+        mkdir '$(System.DefaultWorkingDirectory)/go/pkg'
+        mkdir '$(System.DefaultWorkingDirectory)/go/bin'
+        mkdir '$(System.DefaultWorkingDirectory)/go/src/app'
+        mkdir '$(System.DefaultWorkingDirectory)/go/src/app/build'
+      displayName: 'Set up the Go workspace'
+
     - task: GoTool@0
       inputs:
         version: '1.19'
-        
+        goPath: $(System.DefaultWorkingDirectory)/go
+        goBin: $(System.DefaultWorkingDirectory)/go/bin
+
     - task: Go@0
       inputs:
         command: custom
@@ -30,20 +41,28 @@ stages:
     - task: Go@0
       inputs:
         command: 'custom'
-        customCommand: 'get'
-        arguments: 'github.com/revel/cmd/revel'
+        customCommand: 'install'
+        arguments: 'github.com/revel/cmd/revel@latest'
         workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: 'Go build'
+      displayName: 'Go install Revel'
       
     - script: |
-        find /* -type d -name revel
+        echo "##vso[task.setvariable variable=PATH]${PATH}:$GOBIN"
+      displayName: 'Update $PATH for Go'
+      
+    - script: |
+        shopt -s extglob
+        shopt -s dotglob
+        mv !(go) $GOPATH/src/app
+        cd $(System.DefaultWorkingDirectory)/go/src/app
+        revel build . ./build
       workingDirectory: '$(System.DefaultWorkingDirectory)'
-      displayName: "Find Revel"
+      displayName: "Build with Revel"
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/go/src/app'
         includeRootFolder: false
         archiveType: zip
         archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
@@ -64,8 +83,17 @@ stages:
       runOnce:
         deploy:
           steps:
-            # TBD
-            # need to see if it's possible to use a typical deploy task or deploy via the CLI due to possible Oryx limitations
-            # az webapp deploy --resource-group <group-name> --name <app-name> --src-path <zip-package-path>
-      
-  
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Mysub(00000000-0000-0000-0000-0000000000)'
+              appType: 'webAppLinux'
+              WebAppName: 'myapp'
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              # We use a Node blessed image here, **for now**, because the Go Blessed Image does not let us ZipDeploy without attempting to run an Oryx build
+              # This framework builds differently than others, and given this, we have to do a Zip Deploy since Oryx/Go's expected files will not be found
+              # This is still okay because Revel builds to be ran in non-Go environments
+              # Docs - https://revel.github.io/manual/deployment.html
+              RuntimeStack: 'NODE|18-lts'
+              StartupCommand: 'bash /home/site/wwwroot/build/run.sh'
+              AppSettings: -SCM_DO_BUILD_DURING_DEPLOYMENT false
