@@ -10,7 +10,7 @@ func main() {
     app := fiber.New()
 
     app.Get("/", func (c *fiber.Ctx) error {
-        return c.SendString("Hello, World - From Fiber!")
+        return c.SendString("Hello, from Fiber!")
     })
 
   log.Fatal(app.Listen(":8080"))
