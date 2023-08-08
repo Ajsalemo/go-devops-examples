@@ -1,5 +1,6 @@
 module github.com/go-devops-examples/fiber
 
+// temporarily changing to go 1.19
 go 1.19
 
 require (
