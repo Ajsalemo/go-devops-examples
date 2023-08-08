@@ -6,6 +6,9 @@
 trigger:
 - main
 
+variables:
+  webAppName: 'ansalemo-go'
+
 pool:
   vmImage: ubuntu-latest
 
@@ -24,19 +27,19 @@ stages:
           command: custom
           customCommand: 'mod'
           arguments: 'tidy'
-          workingDirectory: '$(System.DefaultWorkingDirectory)'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/fiber'
       displayName: 'Go mod tidy'
 
     - task: Go@0
       inputs:
         command: 'build'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/fiber'
       displayName: 'Go build'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/fiber'
         includeRootFolder: false
         archiveType: zip
         archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
@@ -52,6 +55,7 @@ stages:
   condition: succeeded()
   jobs:
   - deployment: DeploymentJob
+    environment: $(webAppName)
     strategy:
       runOnce:
         deploy:
