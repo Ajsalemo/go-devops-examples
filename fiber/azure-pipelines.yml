@@ -68,3 +68,4 @@ stages:
               WebAppName: 'your-site'
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               RuntimeStack: 'GO|1.19'
+
