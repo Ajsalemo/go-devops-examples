@@ -1,9 +1,10 @@
 package main
 
 import (
-    "log"
+	"log"
+	"os"
 
-    "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
@@ -13,5 +14,6 @@ func main() {
         return c.SendString("Hello, from Fiber!")
     })
 
-  log.Fatal(app.Listen(":8080"))
+  port := ":" + os.Getenv("PORT")
+  log.Fatal(app.Listen(port))
 }

@@ -7,7 +7,7 @@ trigger:
 - main
 
 variables:
-  webAppName: 'ansalemo-go'
+  webAppName: 'your-site'
 
 pool:
   vmImage: ubuntu-latest
@@ -60,11 +60,11 @@ stages:
       runOnce:
         deploy:
           steps: 
-          - task: AzureRmWebAppDeployment@4
+          - task: AzureRmWebAppDeployment@
             inputs:
               ConnectionType: 'AzureRM'
-              azureSubscription: 'Ansalemo(4388fa06-bf66-4497-82c2-991ba75ecb97)'
+              azureSubscription: 'your-connection'
               appType: 'webAppLinux'
-              WebAppName: 'ansalemo-go'
+              WebAppName: 'your-site'
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               RuntimeStack: 'GO|1.19'
