@@ -3,7 +3,7 @@ module github.com/go-devops-examples/fiber
 // temporarily changing to go 1.19
 go 1.19
 
-require github.com/gofiber/fiber/v2 v2.52.11
+require github.com/gofiber/fiber/v2 v2.52.12
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
