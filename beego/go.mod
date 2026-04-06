@@ -2,7 +2,7 @@ module github.com/azureossd/go-devops-samples/beego
 
 go 1.24.2
 
-require github.com/beego/beego/v2 v2.3.9
+require github.com/beego/beego/v2 v2.3.10
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
